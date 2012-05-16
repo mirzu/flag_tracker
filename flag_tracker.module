@@ -1,0 +1,48 @@
+<?php
+/**
+ * @file
+ *   Flag tracker module.
+ */
+
+/**
+ * Finds the flag name for following content on this site (if any).
+ *
+ * If the flag module (http://drupal.org/project/flag) is enabled, tracker2
+ * can be configured to use a flag for following content. This function
+ * consolidates the checks for if that's all configured, and if so, returns
+ * the name of the flag being used for this feature.
+ *
+ * @return
+ *   The name of the flag being used for following content, or '' (an empty
+ *   string) if flag.module isn't enabled or there's no flag configured for
+ *   this purpose.
+ */
+function flag_tracker_get_follow_flag() {
+  $flag = '';
+  if (module_exists('flag')) {
+    $flag = variable_get'flag_tracker_follow_flag', '');
+  }
+  return $flag;
+}
+
+/**
+ * Implementation of hook_flag().
+ */
+function flag_tracker_flag($event, $flag, $content_id, $account) {
+  // If this flag is the one we're configured to use for following, ensure
+  // that the tracker2 data reflects the current state of the flag for the
+  // given user and node.
+  if (($flag_name = flag_tracker_get_follow_flag()) && $flag->name == $flag_name) {
+    switch ($event) {
+      case 'flag':
+        $node = node_load($content_id);
+        _tracker_add($content_id, $account->uid, $node->changed, FALSE);
+        break;
+
+      case 'unflag':
+        db_query("DELETE FROM {tracker_user} WHERE nid = %d AND uid = %d", $content_id, $account->uid);
+        break;
+
+    }
+  }
+}
