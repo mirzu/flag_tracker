@@ -1,3 +1,6 @@
 name = Flag Tracker
 description = Allow users to track flagged pieces of content
 core = 7.x
+
+dependencies[] = flag
+dependencies[] = tracker

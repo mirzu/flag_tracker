@@ -30,7 +30,7 @@ function flag_tracker_get_follow_flag() {
  */
 function flag_tracker_flag($event, $flag, $content_id, $account) {
   // If this flag is the one we're configured to use for following, ensure
-  // that the tracker2 data reflects the current state of the flag for the
+  // that the Tracker data reflects the current state of the flag for the
   // given user and node.
   if (($flag_name = flag_tracker_get_follow_flag()) && $flag->name == $flag_name) {
     switch ($event) {
@@ -43,7 +43,6 @@ function flag_tracker_flag($event, $flag, $content_id, $account) {
         db_query("DELETE FROM {tracker_user} WHERE nid = :content_id AND uid = :uid",
           array(':content_id' => $content_id, ':uid' => $account->uid));
         break;
-
     }
   }
 }
