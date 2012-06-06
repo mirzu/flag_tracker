@@ -20,7 +20,7 @@
 function flag_tracker_get_follow_flag() {
   $flag = '';
   if (module_exists('flag')) {
-    $flag = variable_get'flag_tracker_follow_flag', '');
+    $flag = variable_get('flag_tracker_follow_flag', '');
   }
   return $flag;
 }
@@ -40,7 +40,8 @@ function flag_tracker_flag($event, $flag, $content_id, $account) {
         break;
 
       case 'unflag':
-        db_query("DELETE FROM {tracker_user} WHERE nid = %d AND uid = %d", $content_id, $account->uid);
+        db_query("DELETE FROM {tracker_user} WHERE nid = :content_id AND uid = :uid",
+          array(':content_id' => $content_id, ':uid' => $account->uid));
         break;
 
     }
