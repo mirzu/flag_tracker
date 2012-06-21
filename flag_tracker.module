@@ -5,6 +5,35 @@
  */
 
 /**
+ * Implements hook_form_node_type_form_alter().
+ */
+function flag_tracker_form_node_type_form_alter(&$form, $form_state) {
+    $form['flag_tracker'] = array(
+    '#type' => 'fieldset',
+    '#title' => 'Flag tracker settings',
+    '#weight' => 35,
+    '#group' => 'additional_settings',
+    '#attached' => array(
+      'js' => array(
+        'vertical-tabs' => drupal_get_path('module', 'flag_tracker') . "/flag_tracker_vertical_tabs.js"
+      ),
+    ),
+  );
+  $flags = flag_get_flags('node');
+  $flag_options[0] = t('- None -');
+  foreach ($flags as $flag) {
+    $flag_options['flag_tracker_' . $form['#node_type']->type . '_use_' . $flag->name] = $flag->title;
+  }
+  $form['flag_tracker']['flag_tracker_track_flag'] = array(
+    '#title' => t('Flag for following issues'),
+    '#type' => 'select',
+    '#options' => $flag_options,
+    '#default_value' => flag_tracker_get_tracker_flag($form['#node_type']->type),
+    '#description' => t("Select which flag to use for this content type."),
+  );
+}
+
+/**
  * Finds the flag name for following content on this site (if any).
  *
  * If the flag module (http://drupal.org/project/flag) is enabled, tracker2
@@ -17,32 +46,37 @@
  *   string) if flag.module isn't enabled or there's no flag configured for
  *   this purpose.
  */
-function flag_tracker_get_follow_flag() {
+function flag_tracker_get_tracker_flag($node_type = 'default') {
   $flag = '';
-  if (module_exists('flag')) {
-    $flag = variable_get('flag_tracker_follow_flag', '');
-  }
+  $flag = variable_get('flag_tracker_track_flag_' . $node_type, 0);
+
   return $flag;
 }
 
+
+
 /**
- * Implementation of hook_flag().
+ *Implements hook_flag().
  */
 function flag_tracker_flag($event, $flag, $content_id, $account) {
-  // If this flag is the one we're configured to use for following, ensure
-  // that the Tracker data reflects the current state of the flag for the
-  // given user and node.
-  if (($flag_name = flag_tracker_get_follow_flag()) && $flag->name == $flag_name) {
-    switch ($event) {
-      case 'flag':
-        $node = node_load($content_id);
-        _tracker_add($content_id, $account->uid, $node->changed, FALSE);
-        break;
+  // If this is a node flag see if its configured to as the flag for this content type.
+  if ($flag->content_type == 'node') {
+    $node = node_load($content_id);
+    // If this flag is the one we're configured to use for following, ensure
+    // that the Tracker data reflects the current state of the flag for the
+    // given user and node.
+    if (($flag_name = flag_tracker_get_tracker_flag($node->type)) && $flag->name == $flag_name) {
+      switch ($event) {
+        case 'flag':
+          _tracker_add($content_id, $account->uid, $node->changed, FALSE);
+          break;
 
-      case 'unflag':
-        db_query("DELETE FROM {tracker_user} WHERE nid = :content_id AND uid = :uid",
-          array(':content_id' => $content_id, ':uid' => $account->uid));
-        break;
+        case 'unflag':
+          db_query("DELETE FROM {tracker_user} WHERE nid = :content_id AND uid = :uid",
+            array(':content_id' => $content_id, ':uid' => $account->uid));
+          break;
+      }
     }
   }
 }
+
