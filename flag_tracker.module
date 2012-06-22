@@ -8,7 +8,7 @@
  * Implements hook_form_node_type_form_alter().
  */
 function flag_tracker_form_node_type_form_alter(&$form, $form_state) {
-    $form['flag_tracker'] = array(
+  $form['flag_tracker'] = array(
     '#type' => 'fieldset',
     '#title' => 'Flag tracker settings',
     '#weight' => 35,
@@ -59,7 +59,6 @@ function flag_tracker_get_tracker_flag($node_type = 'default') {
  *Implements hook_flag().
  */
 function flag_tracker_flag($event, $flag, $content_id, $account) {
-      dpm('test');
   // If this is a node flag see if its configured to as the flag for this content type.
   if ($flag->content_type == 'node') {
     $node = node_load($content_id);
